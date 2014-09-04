@@ -1,10 +1,29 @@
-set -e
+#!/bin/bash
+set -e;
 
 source rainbow.sh
 source spinner.sh
 
 # Load PROJECT_ID.
 source .workflowrc
+
+trap cleanup EXIT
+
+function cleanup {
+  if [[ "$?" -ne "0" ]]; then
+    echo "Oops, sorry, something went wrong so I'm bailing out."
+  fi
+  stop_spinner 0
+}
+
+# Lowercase and dasherize string.
+function slugify_string {
+  echo -e $1 | awk '{print tolower($0)}' | tr " " "-" | tr "\t" "-"
+}
+
+function flush_stdio {
+  while read -e -t 1; do : ; done
+}
 
 if [[ -z ${PROJECT_ID} ]]; then
   echo "Please specify Pivotal Tracker's PROJECT_ID in '.workflowrc' file"
@@ -21,46 +40,36 @@ start_spinner "Loading stories from Pivotal tracker"
 stories=$(pivotal_tools show stories --number 100  --project-id ${PROJECT_ID}) || {
   # Handle failure.
   echo -e "\n${stories}"
-  stop_spinner 0
   exit 1
 }
 stop_spinner 0
-stories=$(echo "${stories}" | grep "feature\|bug[\s]+started\|unstarted[^[]+\[" | grep -v "unscheduled[^[]*\[")
+
+stories_array=($(echo -e "${stories}" | grep "feature\|bug[\s]+started\|unstarted[^[]+\[" | grep -v "unscheduled[^[]*\["))
 
 echo "I will now list all the suitable stories in Pivotal Tracker I've found."
 
-line_index=0;
-for line in $stories; do
-  if [ "$line_index" -le "9" ]; then
-    # Add OCD padding.
-    echo "[$line_index]:  $line [$line_index]";
+for i in "${!stories_array[@]}"; do
+  if [ "$i" -le "9" ]; then
+    # OCD padding.
+    echo "[$i]:  ${stories_array[$i]} [$i]";
   else
-    echo "[$line_index]: $line [$line_index]";
+    echo "[$i]: ${stories_array[$i]} [$i]";
   fi;
-  line_index=`expr $line_index + 1`
 done
+
+flush_stdio
 
 # Prompt user to select a story.
-while read -e -t 1; do : ; done
 read -p "Please choose a story to start: " story_index
 case $story_index in
-  [0-9]* ) echo "You chose story number ${story_index}. Thank you. ";;
-  * ) echo "Non numeric value detected. Exiting now."; exit 0;;
+  [0-9]* ) echo "You chose story number ${story_index}. Thank you.";;
+  * ) echo "Non-numeric value detected. Exiting now."; exit 0;;
 esac
 
-# Find story with selected index.
-line_index=0;
-for line in $stories; do
-  if [ "${line_index}" -eq "${story_index}" ]; then
-    story=${line}
-  fi
-  line_index=`expr $line_index + 1`
-done
-
 # Parse story string to get the story id.
-story_id=`echo ${story} | cut -d' ' -f1 | tr -d \#`
+story_id=`echo ${stories_array[$story_index]} | cut -d' ' -f1 | tr -d \#`
 
-branch_exists=`git branch -a | grep ${story_id}`
+branch_exists=$(git branch -a | grep ${story_id}) || echo ""
 if [[ ! -z "${branch_exists}" ]]; then
   echo
   echo -e "Wait wait wait. Existing branch found for story ${story_id} -> ${branch_exists}"
@@ -68,20 +77,23 @@ if [[ ! -z "${branch_exists}" ]]; then
   exit 0
 fi
 
-echo; echogreen "Creating The Feature Branch"
+echogreen "Creating The Feature Branch"
+
+flush_stdio
 
 echo "I'll ask you to input a human readable slug now."
 echo "It will be used to create the feature branch."
-read -p "Please insert the slug: " story_slug
+read -p "Please insert the slug: " human_name
 
-story_slug=`echo -e ${story_slug} | awk '{print tolower($0)}' | tr " " "-" | tr "\t" "-"`
+story_slug=`slugify_string "${human_name}"`
+new_branch="story/${story_slug}/${story_id}"
 
-NEW_BRANCH="story/${story_slug}/${story_id}"
-
-echo "This will create a branch called '${NEW_BRANCH}'"
+echo "This will create a branch called '${new_branch}'"
 read -p "You cool with that? [y/n] " -n 1 -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  exit 1
+  echo "'\nI will exit now. If you want to try again, just run me again."
+  echo "Have a nice day."
+  exit 0
 fi
 
 echo "I will now checkout develop..."
@@ -89,17 +101,14 @@ git checkout develop
 
 echo
 
-echo "Creating branch story/${story_slug}/${story_id} now..."
-git checkout -b "story/${story_slug}/${story_id}" 
+echo "Creating branch '${new_branch}' now..."
+git checkout -b ${new_branch}
 
 echo
 
 # Instruct PT backend to update the story.
 start_spinner "Setting story #${story_id} state to 'started'"
-pivotal_tools start story ${story_id} --project-id ${PROJECT_ID} || {
-  stop_spinner 0
-}
-echo
+pivotal_tools start story ${story_id} --project-id ${PROJECT_ID}
 stop_spinner 0
 
 echo; echogreen "Done"
