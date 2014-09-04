@@ -108,6 +108,7 @@ echo
 
 # Instruct PT backend to update the story.
 start_spinner "Setting story #${story_id} state to 'started'"
+echo
 pivotal_tools start story ${story_id} --project-id ${PROJECT_ID}
 stop_spinner 0
 
