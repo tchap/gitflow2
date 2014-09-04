@@ -4,7 +4,7 @@
 
  * Clone this repository.
  * `pip install -r requirements.txt --allow-unverified RBTools --allow-external RBTools`
- * Update your system PATH to include this repo contents.
+ * Run `wget --no-check-certificate -q -O - https://github.com/realyze/gitflow2/raw/master/install.sh | sudo bash`
 
 Then
 
@@ -13,5 +13,5 @@ Then
 
 
 ## Commands
-start.sh -> start a story
-finish.sh -> rebase and post a review
+ * start.sh -> start a story
+ * finish.sh -> rebase and post a review

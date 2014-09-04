@@ -3,9 +3,9 @@
 GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
 
 function cmd_start {
-  ${GITFLOW_DIR}/git-flow-feature-start `pwd` 
+  ${GITFLOW_DIR}/git-flow2-feature-start `pwd` 
 }
 
 function cmd_finish {
-  ${GITFLOW_DIR}/git-flow-feature-finish `pwd` 
+  ${GITFLOW_DIR}/git-flow2-feature-finish `pwd` 
 }

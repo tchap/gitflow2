@@ -7,7 +7,7 @@ fi
 
 SUBCOMMAND="$1"; shift
 
-. "git-flow-$SUBCOMMAND"
+. "git-flow2-$SUBCOMMAND"
 
 SUBACTION="$1"; shift
 
