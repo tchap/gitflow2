@@ -129,6 +129,8 @@ fi
 descr=`git log --pretty=format:"%h - %an, %ad : %s" develop..`
 
 function handle_rbt_post_error {
+  # Remove temp file if it exists.
+  [[ -n ${tmpfile} ]] && rm ${tmpfile}
   echo
   echo "${__bold}Uh oh. Review Board reported an error.${__normal}"
   print_scream

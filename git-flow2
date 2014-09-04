@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]; then
+  echo "You're WRONG!"
+  exit 1
+fi
+
+SUBCOMMAND="$1"; shift
+
+. "git-flow-$SUBCOMMAND"
+
+SUBACTION="$1"; shift
+
+cmd_$SUBACTION "$@"
