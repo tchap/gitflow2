@@ -69,11 +69,23 @@ esac
 # Parse story string to get the story id.
 story_id=`echo ${stories_array[$story_index]} | cut -d' ' -f1 | tr -d \#`
 
-branch_exists=$(git branch -a | grep ${story_id}) || echo ""
-if [[ ! -z "${branch_exists}" ]]; then
+[[ -n "${DEBUG}" ]] && echo -e "matching branches:\n `git branch -a | grep ${story_id}`"
+
+matching_branches=$(\
+  git branch -a | grep ${story_id} | \
+  sed 's~^\*\ ~  ~;s~^[ ]*~~'| sed "s~remotes/[^/]*/~~" | \
+  uniq
+) || echo ""
+
+[[ -n "${DEBUG}" ]] && echo -e "matches:" ${matching_branches}
+
+if [[ -n "${matching_branches}" ]]; then
   echo
-  echo -e "Wait wait wait. Existing branch found for story ${story_id} -> ${branch_exists}"
-  echo -e "Just checkout branch ${branch_exists} and you'll be alright."
+  echo "Wait wait wait. Existing branch(es) found for story ${story_id}."
+  for branch in "${matching_branches}"; do echo " - ${branch}"; done
+  echo
+  echo "Just checkout one of them and work there."
+  echo "I wish you a good day."
   exit 0
 fi
 
@@ -91,7 +103,8 @@ new_branch="story/${story_slug}/${story_id}"
 echo "This will create a branch called '${new_branch}'"
 read -p "You cool with that? [y/n] " -n 1 -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "'\nI will exit now. If you want to try again, just run me again."
+  echo
+  echo "I will exit now. If you want to try again, just run me again."
   echo "Have a nice day."
   exit 0
 fi

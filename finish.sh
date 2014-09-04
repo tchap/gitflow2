@@ -1,4 +1,5 @@
-set -e;
+set -e
+set -o pipefail
 
 source spinner.sh
 source rainbow.sh
@@ -71,9 +72,8 @@ story_title=$(echo "${stories}" | grep ${STORY_ID} | sed -E 's/^.*\[[* ]+\][ ]*(
 
 echo; echogreen "Enter Rebase"
 
-echo -e "Rebasing ${BRANCH} on top of develop..."
-git rebase develop || {
-  echo -e "${__bold}Oh noes! Looks like rebase failed.${__normal}\n"
+
+function print_scream {
   echo -e "     .----------.   " 
   echo -e "    /  .-.  .-.  \  "
   echo -e "   /   | |  | |   \ "
@@ -82,6 +82,12 @@ git rebase develop || {
   echo -e "   \ |   /  /  / /  "
   echo -e "   / |  \`--'  /\ \  "
   echo -e "    /\`-------'  \ \ "
+}
+
+echo -e "Rebasing ${BRANCH} on top of develop..."
+git rebase develop || {
+  echo -e "${__bold}Oh noes! Looks like rebase failed.${__normal}\n"
+  print_scream
   echo -e "\nBut you'll be fine. Really.\n${__bold}Follow git's instructions above \
 and when you're done, just run me again.${__normal}"
   exit 1
@@ -97,8 +103,8 @@ stop_spinner 0
 
 [[ -n "${DEBUG}" ]] && echo -e "Jolly good, I got them data."
 
-# How many review drafts do I have in RB?
-count=`echo "${reviews}" | wc -l`
+# How many review drafts do I have in RB? (Ignore blank lines.)
+count=`echo "${reviews}" | sed '/^\s*$/d' | wc -l`
 if [ "${count}" -gt "1" ]; then
   SHOULD_UPDATE_REVIEW=true;
   echo -e "\nI have found more than one review request candidate to update. Here they are:"
@@ -122,15 +128,29 @@ fi
 
 descr=`git log --pretty=format:"%h - %an, %ad : %s" develop..`
 
+function handle_rbt_post_error {
+  echo
+  echo "${__bold}Uh oh. Review Board reported an error.${__normal}"
+  print_scream
+  echo "I will now bail out on you. Sorry."
+  echo "If the error makes sense, please fix it and run me again."
+  echo "Have a good day."
+  exit 1
+}
+
 tmpfile=`mktemp /tmp/gitflowXXXXXXXX`
 # Crazy hack caused by tee not line buffering stdout.
 # See http://stackoverflow.com/questions/11337041/force-line-buffering-of-stdout-when-piping-to-tee
 if [[ "$(uname)" == "Linux" ]]; then
   # It's probably linux.
-  script -c "rbt post --parent develop ${update} --description \"${descr}\" --summary \"${STORY_ID}: ${story_title}\"" /dev/null | tee ${tmpfile}
+  script -c "rbt post --parent develop ${update} --description \"${descr}\" --summary \"${STORY_ID}: ${story_title}\"" /dev/null | tee ${tmpfile} || {
+    handle_rbt_post_error
+  }
 else
   # Mac or FreeBSD.
-  script -q /dev/null rbt post --parent develop ${update} --description "${descr}" --summary "${STORY_ID}: ${story_title}" | tee ${tmpfile}
+  script -q /dev/null rbt post --parent develop ${update} --description "${descr}" --summary "${STORY_ID}: ${story_title}" | tee ${tmpfile} || {
+    handle_rbt_post_error
+  }
 fi
 
 # Get the posted review request URL.
@@ -156,10 +176,11 @@ fi
 
 echo; echogreen "Next Steps"
 echo "Please go through the review and annotate it. If you find any issues you want to fix, do it and run me again."
-echo; echored "#######################################################"
+echo
+echored "#######################################################"
 echored "IMPORTANT: Your code has not been merged and/or pushed."
 echored "#######################################################"
-echo;
+echo
 echo "NEXT STEPS:"
 echo -e "\t 1) When you think the review is ready to be published, publish it in ReviewBoard."
 echo -e "\t 2) Rebase on top of develop with ${__bold}'git rebase develop'${__normal}"
