@@ -14,7 +14,7 @@ if [ -z "$REPO_HOME" ] ; then
 fi
 
 EXEC_FILES="git-flow2"
-SCRIPT_FILES="git-flow-feature git-flow-feature-start git-flow-feature-finish"
+SCRIPT_FILES="git-flow-feature git-flow-feature-start git-flow-feature-finish spinner.sh rainbow.sh"
 
 echo "### gitflow2 no-make installer ###"
 

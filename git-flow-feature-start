@@ -1,16 +1,24 @@
 #!/bin/bash
 set -e;
 
+PWD=$1
+
 . rainbow.sh
 . spinner.sh
 
 # Load PROJECT_ID.
-. .workflowrc
+[[ -e ${PWD}/.workflowrc ]] || {
+  echo "Could not find \"${PWD}/.workflowrc\" file."
+  echo "Please create it and write PROJECT_ID=\"<your PT project id>\" into it."
+  exit 1
+}
+. ${PWD}/.workflowrc
 
 trap cleanup EXIT
 
 function cleanup {
   if [[ "$?" -ne "0" ]]; then
+    echo
     echo "Oops, sorry, something went wrong so I'm bailing out."
   fi
   stop_spinner 0

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+
 function cmd_start {
-  /bin/bash git-flow-feature-start "$@"
+  ${GITFLOW_DIR}/git-flow-feature-start `pwd` 
 }
