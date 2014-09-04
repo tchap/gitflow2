@@ -17,4 +17,4 @@ CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
   exit 1
 }
 
-${GITFLOW_DIR}/git-flow2-feature-start `pwd` 
+${GITFLOW_DIR}/git-flow2-${SUBCOMMAND}-${SUBACTION} `pwd` 
