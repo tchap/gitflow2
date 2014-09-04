@@ -13,7 +13,7 @@ if [ -z "$REPO_HOME" ] ; then
 	REPO_HOME="http://github.com/realyze/gitflow2.git"
 fi
 
-EXEC_FILES="git-flow2 git-flow-feature git-flow-feature-start git-flow-feature-finish"
+EXEC_FILES="git-flow2 git-flow2-feature git-flow2-feature-start git-flow2-feature-finish"
 SCRIPT_FILES="spinner.sh rainbow.sh"
 
 echo "### gitflow2 no-make installer ###"
