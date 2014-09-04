@@ -1,11 +1,20 @@
+#!/bin/bash
 set -e
 set -o pipefail
 
-source spinner.sh
-source rainbow.sh
+PWD=$1
+
+. spinner.sh
+. rainbow.sh
 
 # Load PROJECT_ID.
-source .workflowrc 
+[[ -e ${PWD}/.workflowrc ]] || {
+  echo "Could not find \"${PWD}/.workflowrc\" file."
+  echo "Please create it and write PROJECT_ID=\"<your PT project id>\" into it."
+  exit 1
+}
+. ${PWD}/.workflowrc
+
 
 trap cleanup EXIT
 
