@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e;
 
-source rainbow.sh
-source spinner.sh
+. rainbow.sh
+. spinner.sh
 
 # Load PROJECT_ID.
-source .workflowrc
+. .workflowrc
 
 trap cleanup EXIT
 
