@@ -1,5 +1,5 @@
 #!/bin/bash
 
 function cmd_start {
-  /bin/bash start.sh
+  /bin/bash git-flow-feature-start.sh
 }
