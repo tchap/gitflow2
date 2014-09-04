@@ -5,10 +5,16 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
+GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+
 SUBCOMMAND="$1"; shift
-
-. "git-flow2-$SUBCOMMAND"
-
 SUBACTION="$1"; shift
 
-cmd_$SUBACTION "$@"
+CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
+
+[[ -x "${GITFLOW_DIR}/${CMD_SCRIPT}" ]] || {
+  echo "Command ${SUBCOMMAND} ${SUBACTION} not found."
+  exit 1
+}
+
+${GITFLOW_DIR}/git-flow2-feature-start `pwd` 
