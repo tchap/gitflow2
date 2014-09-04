@@ -122,7 +122,37 @@ fi
 
 descr=`git log --pretty=format:"%h - %an, %ad : %s" develop..`
 
-rbt post --parent develop ${update} --description "${descr}" --summary "${STORY_ID}: ${story_title}"
+tmpfile=`mktemp /tmp/gitflowXXXXXXXX`
+# Crazy hack caused by tee not line buffering stdout.
+# See http://stackoverflow.com/questions/11337041/force-line-buffering-of-stdout-when-piping-to-tee
+if [[ "$(uname)" == "Linux" ]]; then
+  # It's probably linux.
+  script -c "rbt post --parent develop ${update} --description \"${descr}\" --summary \"${STORY_ID}: ${story_title}\"" /dev/null | tee ${tmpfile}
+else
+  # Mac or FreeBSD.
+  script -q /dev/null rbt post --parent develop ${update} --description "${descr}" --summary "${STORY_ID}: ${story_title}" | tee ${tmpfile}
+fi
+
+# Get the posted review request URL.
+# We have to convert line endings to linux (if we're on OSX) so that grep works.
+review_url=$(tr '\r' '\n' <${tmpfile} | grep ".*://.*/r/[0-9][0-9]*/$") || {
+  echo ""
+}
+
+# Delete the temp file.
+rm ${tmpfile} || {
+  echo
+}
+
+if [[ -n "${review_url}" ]]; then
+  start_spinner "Adding Review Board link to story ${STORY_ID}..."
+  echo
+  COMMENT="New review has been posted: ${review_url}"
+  pivotal_tools add comment ${STORY_ID} ${COMMENT} --project-id ${PROJECT_ID}
+  stop_spinner 0
+else
+  echo "Oops...I could not figure out the review request URL."
+fi
 
 echo; echogreen "Next Steps"
 echo "Please go through the review and annotate it. If you find any issues you want to fix, do it and run me again."
