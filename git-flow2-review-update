@@ -61,6 +61,38 @@ function update_review_request {
 }
 
 
+function draw_motivational_dude {
+  # from http://www.ascii-art.de/ascii/my/small2.shtml
+  echo "                 /                                     "
+  echo "                /               .'                     "
+  echo "               /              .'                       "
+  echo "              /   ______.   .'                         "
+  echo "             /   / __/_//  '  Updating                 "
+  echo "            /   / /  c c             our               "
+  echo "           /    \ G    >        reviews     _.-'       "
+  echo "          /      \/.  -                 _.-'           "
+  echo "         /     .---\  / --.         _.-'               "
+  echo "        /     /     \(     \    _.-'                   "
+  echo "       /     /  \    \  (.  )  '       for             "
+  echo "      /     /   /\       \ /               a           "
+  echo "     /      \  |  \       \               __..--''     "
+  echo "    /   .'   \_\   )     )\\      __..--''             "
+  echo "   /  .'      ) \  |    /   \  -''                     "
+  echo "  / .'   _   '///\` (   /\    \                        "
+  echo " /.' _.-'  __     /    ) )    )       better           "
+  echo " '.-'..--''      /   ,' /    /            tomorrow     "
+  echo "  .__---------- /__./  /    / --------------------     "
+  echo "     \`\`--..  __//  /   )   /                         "
+  echo "            /    _J)   /)\`-\                          "
+  echo "            '\`-__/-'  \` \\  |(                       "
+  echo "                       \`   \  -..__                   "
+  echo "                          \`--'       \`\`--..__       "
+  echo "                                             \`\`--    "
+}
+
+
+draw_motivational_dude
+
 last_commit_log=$(git log -1 --pretty=format:"%s %b")
 line=$(echo -e "${last_commit_log}" | \
   grep -E -i "${STORY_ID_LINE_RX}") || {
@@ -77,7 +109,7 @@ start_spinner "Loading ReviewBoard repositories..."
 rb_repo_id=$(rbt api-get /repositories --max-results=200 | \
   underscore extract 'repositories' | \
   underscore find "value.path.indexOf('${github_repo}') >= 0" | \
-  underscore extract 'id')
+  underscore extract 'id' --outfmt text)
 stop_spinner 0
 
 start_spinner "Loading review request update candidates.."
@@ -99,6 +131,10 @@ if [[ ${#review_requests[@]} -eq "1" ]]; then
   exit 0
 fi
 
+echo
+echo "We have found more than one candidate review to update. You'll have to choose."
+echo
+
 for i in "${!review_requests[@]}"; do
   if [ "$i" -le "9" ]; then
     # OCD padding.
@@ -108,6 +144,7 @@ for i in "${!review_requests[@]}"; do
   fi;
 done
 
+# Get rid of garbage in stdin.
 flush_stdio
 
 read -p "Please select review to update: " selected_index
