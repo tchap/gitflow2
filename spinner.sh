@@ -66,9 +66,9 @@ function _spinner() {
             # inform the user uppon success or failure
             #echo -en "\b["
             #if [[ $2 -eq 0 ]]; then
-            #    echo -en "${green}${on_success}${nc}"
+            #    echo -en "${on_success}"
             #else
-            #    echo -en "${red}${on_fail}${nc}"
+            #    echo -en "${on_fail}"
             #fi
             #echo -e "]"
             ;;

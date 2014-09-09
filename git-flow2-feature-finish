@@ -16,9 +16,6 @@ function cleanup {
   stop_spinner 0
 }
 
-__bold=`tput bold`
-__normal=`tput sgr0`
-
 # Make sure we're spliting strings by newlines.
 export IFS=$'\n'
 
@@ -104,16 +101,17 @@ start_spinner "Loading data from ReviewBoard... (might take a moment or two)"
 reviews=$(rbt status | grep ${STORY_ID} || echo)
 stop_spinner 0
 
-[[ -n "${DEBUG}" ]] && echo -e "Jolly good, I got them data."
+[[ -n "${DEBUG}" ]] && echo -e "Jolly good, I got them data: ${reviews}"
 
 # How many review drafts do I have in RB? (Ignore blank lines.)
-count=`echo "${reviews}" | sed '/^\s*$/d' | wc -l`
+count=`echo -e "${reviews}" | sed '/^\s*$/d' | wc -l`
 if [ "${count}" -gt "1" ]; then
   SHOULD_UPDATE_REVIEW=true;
   echo -e "\nI have found more than one review request candidate to update. Here they are:"
   echo -e "${reviews}"
   echo -e "Note: '*' means it's a draft (or there's an unpublished new update)."
 elif [ "${count}" -eq "1" ]; then
+  echo -e "One review request found: ${reviews}"
   SHOULD_UPDATE_REVIEW=true;
 else
   echo -e "No suitable review request found. Will create a shiny new one."
@@ -129,7 +127,7 @@ else
   echo -e "Posting a new review request..."
 fi
 
-descr=`git log --pretty=format:"%h - %an, %ad : %s" develop..`
+descr=`git log "${GIT_LOG_FORMAT}" develop..`
 
 function handle_rbt_post_error {
   # Remove temp file if it exists.
@@ -148,12 +146,13 @@ tmpfile=`mktemp /tmp/gitflowXXXXXXXX`
 # See http://stackoverflow.com/questions/11337041/force-line-buffering-of-stdout-when-piping-to-tee
 if [[ "$(uname)" == "Linux" ]]; then
   # It's probably linux.
-  script -c "rbt post --parent develop ${update} --description \"${descr}\" --summary \"${STORY_ID}: ${story_title}\"" /dev/null | tee ${tmpfile} || {
+  script -c "rbt post --parent develop ${update} --description \"${descr}\" --summary $(generate_rb_summary)" /dev/null | tee ${tmpfile} || {
     handle_rbt_post_error
   }
 else
   # Mac or FreeBSD.
-  script -q /dev/null rbt post --parent develop ${update} --description "${descr}" --summary "${STORY_ID}: ${story_title}" | tee ${tmpfile} || {
+  script -q /dev/null rbt post --parent develop ${update} --description \
+    "${descr}" --summary $(generate_rb_summary) | tee ${tmpfile} || {
     handle_rbt_post_error
   }
 fi

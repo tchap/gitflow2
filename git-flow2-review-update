@@ -1,0 +1,134 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+[[ -n "${DEBUG}" ]] && set -x
+
+PWD=$1
+
+. rainbow.sh
+. spinner.sh
+. git-flow2-common.sh
+
+source_config ${PWD}
+
+trap cleanup EXIT
+
+function cleanup {
+  if [[ "$?" -ne "0" ]]; then
+    echo
+    echo "I'm bailing out. Have a nice day!"
+  fi
+  stop_spinner 0
+}
+
+# Mae sure user has `underscore-cli` installed.
+_=$(underscore --version 2>/dev/null) || {
+  print_scream
+  echo "${__bold}Looks like you don't have underscore-cli installed!${__normal}"
+  echo "Run 'npm install -g underscore-cli' like, right now!"
+  exit 1
+}
+
+
+STORY_ID_LINE_RX=".*(story-id).*[0-9]{8,9}.*"
+STORY_ID_RX="s|.*\([0-9]\{8,9\}\).*|\1|"
+
+
+function handle_missing_story_id {
+  print_scream
+  last_commit_sha=$(git log -1 --pretty=format:"%h")
+  echo "Story id not found in commit message for '${last_commit_sha}'."
+  echo "Please use 'git commit --amend' to add a 'story-id: <PT story id>' line."
+  exit 1
+}
+
+
+function update_review_request {
+  local rid=$1
+  local last_commit_log=$2
+  local descr
+  local new_descr
+  
+  start_spinner "Loading old review request description..."
+  descr=$(rbt api-get /review-requests/${rid}/ | \
+    underscore extract 'review_request.description' --outfmt text)
+  stop_spinner 0
+
+  new_descr=$(echo -e "${last_commit_log}\n${descr}")
+
+  rbt post -r ${rid} --description "${new_descr}"
+}
+
+
+last_commit_log=$(git log -1 --pretty=format:"%s %b")
+line=$(echo -e "${last_commit_log}" | \
+  grep -E -i "${STORY_ID_LINE_RX}") || {
+  handle_missing_story_id
+}
+
+story_id=$(echo ${line} | sed "${STORY_ID_RX}")
+github_repo=$(git config --get remote.origin.url | sed -E "s|.*[:/]{1}([^:/]+/[^:]+)$|\1|") 
+
+start_spinner "Loading ReviewBoard repositories..."
+# WARNING: Here be dark magic...
+# We need to limit number review request update candidates. So we want to know the
+# RB repo id. This is how we find it.
+rb_repo_id=$(rbt api-get /repositories --max-results=200 | \
+  underscore extract 'repositories' | \
+  underscore find "value.path.indexOf('${github_repo}') >= 0" | \
+  underscore extract 'id')
+stop_spinner 0
+
+start_spinner "Loading review request update candidates.."
+# WARNING: Here be dark magic too...
+# Get all review requests whose branch field value contains `story_id`.
+review_requests=($(rbt api-get /review-requests --max-results=200 --repository=${rb_repo_id} --ship-it=0 --status=pending | \
+  underscore extract review_requests | \
+  underscore reject "value.branch.indexOf('${story_id}') < 0" | \
+  underscore pluck id --outfmt text))
+stop_spinner 0
+
+if [[ ${#review_requests[@]} -eq "1" ]]; then
+  echo "There's exacly one matching review request: #${review_requests[0]}."
+  echo "Let's update it now."
+  update_review_request ${review_requests[0]} "${last_commit_log}"
+  echo
+  echo "All done. Have a nice day!"
+
+  exit 0
+fi
+
+for i in "${!review_requests[@]}"; do
+  if [ "$i" -le "9" ]; then
+    # OCD padding.
+    echo "[$i]:  ${review_requests[$i]}"
+  else
+    echo "[$i]: ${review_requests[$i]}"
+  fi;
+done
+
+flush_stdio
+
+read -p "Please select review to update: " selected_index
+
+if [[ "${selected_index}" -lt "0" ]] || [[ "${selected_index}" -ge "${#review_requests[@]}" ]]; then
+  echo
+  echo "Selected index is out of bounds like, totally. Run me again and choose better next time!"
+  exit 1;
+fi
+
+case ${selected_index} in
+  [0-9]* ) ;;
+  * ) echo "Non-numeric value detected. Exiting now."; exit 1;;
+esac
+
+rid=${review_requests[${selected_index}]}
+
+echo "Thank you! I will now proceed to update review #${rid}."
+
+update_review_request "${rid}" "${last_commit_log}"
+
+echo
+echo "All done. Don't forget to publish your changes in Review Board!"
+echo "Have a nice day!"

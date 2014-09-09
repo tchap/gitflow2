@@ -24,10 +24,6 @@ function slugify_string {
   echo -e $1 | awk '{print tolower($0)}' | tr " " "-" | tr "\t" "-"
 }
 
-function flush_stdio {
-  while read -e -t 1; do : ; done
-}
-
 if [[ -z ${PROJECT_ID} ]]; then
   echo "Please specify Pivotal Tracker's PROJECT_ID in '.workflowrc' file"
   exit 1
