@@ -50,7 +50,8 @@ case "$1" in
       git clone "$REPO_HOME" "$REPO_NAME"
     fi
     echo "Installing python requirements"
-    pip install -r "$REPO_NAME/requirements.txt"
+    pip install -r "$REPO_NAME/requirements.txt" \
+      --allow-external RBTools --allow-unverified RBTools
     if [[ "$?" -ne "0" ]]; then
       exit 1
     fi
