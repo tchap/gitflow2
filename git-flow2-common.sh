@@ -42,9 +42,9 @@ function ensure_pt {
     echo "${__bold}Oh noes! Missing gitflow config '${field}'!${__normal}"
     print_scream
     if [[ -z "${global}" ]]; then
-      echo "Add '${field}' to the 'pivotaltracker' section of your gitflow.yml file in the gitflow-config branch!"
+      echo "Add '${field}' to the 'pivotal_tracker' section of your gitflow.yml file in the gitflow-config branch!"
     else
-      echo "Add '${field}' to the 'pivotaltracker' section of ${HOME}/.gitflow.yml file!"
+      echo "Add '${field}' to the 'pivotal_tracker' section of ${HOME}/.gitflow.yml file!"
     fi
     exit 1
   fi
