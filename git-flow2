@@ -13,12 +13,19 @@ function run_bash_command {
   local SUBCOMMAND=$1; shift
   local SUBACTION=$1; shift
 
-  [[ -x "${GITFLOW_DIR}/${CMD_SCRIPT}" ]] || {
-    echo "Git flow command ${SUBCOMMAND} ${SUBACTION} not found."
-    exit 1
-  }
+  CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
 
-  ${GITFLOW_DIR}/git-flow2-${SUBCOMMAND}-${SUBACTION} $@
+  if [[ "${SUBACTION}" == "-h" ]]; then
+    echo "help is TODO"
+    exit 0
+  fi
+  
+  if [[ ! -x "${GITFLOW_DIR}/${CMD_SCRIPT}" ]]; then
+    echo "Git flow command '${SUBCOMMAND} ${SUBACTION}' not found."
+    exit 1
+  fi
+
+  ${GITFLOW_DIR}/${CMD_SCRIPT} $@
 }
 
 case $SUBCOMMAND in

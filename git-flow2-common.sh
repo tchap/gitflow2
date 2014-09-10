@@ -13,7 +13,6 @@ function handle_missing_config {
   print_scream
   echo "So listen...we kinda expect you to have a ${__bold}gitflow.yml${__normal} file in a branch called "
   echo "${__bold}gitflow-config${__normal} in your repo. And you don't seem to have it. So please add it."
-  echo "And specify 'pivotaltracker' field with 'projectid: <YOUR PT PROJECT ID>' in that file."
   echo
   echo "Have a nice day!"
   return 1

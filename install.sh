@@ -15,6 +15,7 @@ fi
 
 EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-review-update git-flow2-post-reviews"
 SCRIPT_FILES="git-flow2-spinner.sh git-flow2-rainbow.sh git-flow2-common.sh"
+GO_FILES="git-trunk"
 
 echo "### gitflow2 no-make installer ###"
 
@@ -22,7 +23,7 @@ case "$1" in
   uninstall)
     echo "Uninstalling gitflow2 from $INSTALL_PREFIX"
     if [ -d "$INSTALL_PREFIX" ] ; then
-      for script_file in $SCRIPT_FILES $EXEC_FILES ; do
+      for script_file in $SCRIPT_FILES $EXEC_FILES $GO_FILES; do
         echo "rm -vf $INSTALL_PREFIX/$script_file"
         rm -vf "$INSTALL_PREFIX/$script_file"
       done
@@ -60,6 +61,14 @@ case "$1" in
     done
     for script_file in $SCRIPT_FILES ; do
       install -v -m 0644 "$REPO_NAME/$script_file" "$INSTALL_PREFIX"
+    done
+    GIT_TRUNK="git-trunk.darwin-amd64-osx10.9"
+    if [[ ! -f "${GIT_TRUNK}.zip" ]]; then
+      wget https://github.com/tchap/git-trunk/releases/download/v0.1/git-trunk.darwin-amd64-osx10.9.zip
+    fi
+    unzip -o "${GIT_TRUNK}.zip"
+    for go_binary in $GO_FILES ; do
+      install -v -m 0755 "${GIT_TRUNK}/${go_binary}" "${INSTALL_PREFIX}"
     done
     exit
     ;;
