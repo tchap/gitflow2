@@ -16,7 +16,7 @@ PROJECT_ID=$(ensure_pt "project_id") || {
   exit 1
 }
 
-PIVOTAL_TOKEN=$(ensure_pt "api_token" "global") || {
+PIVOTAL_TOKEN=$(ensure_pt "token" "global") || {
   echo "${PIVOTAL_TOKEN}"
   exit 1
 }
