@@ -68,8 +68,9 @@ function _spinner() {
             #if [[ $2 -eq 0 ]]; then
             #    echo -en "${on_success}"
             #else
-            #    echo -en "${on_fail}"
-            #fi
+            if [[ $2 -ne "0" ]]; then
+                echo -en "\n"
+            fi
             #echo -e "]"
             ;;
         *)

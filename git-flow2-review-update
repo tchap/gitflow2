@@ -17,7 +17,7 @@ trap cleanup EXIT
 function cleanup {
   if [[ "$?" -ne "0" ]]; then
     echo
-    echo "I'm bailing out. Have a nice day!"
+    echo "I'm bailing out now. Have a nice day!"
   fi
   stop_spinner 0
 }
@@ -36,10 +36,14 @@ STORY_ID_RX="s|.*\([0-9]\{8,9\}\).*|\1|"
 
 
 function handle_missing_story_id {
-  print_scream
   last_commit_sha=$(git log -1 --pretty=format:"%h")
-  echo "Story id not found in commit message for '${last_commit_sha}'."
+  echo "${__bold}Oh noes, I could not update your review!${__normal}"
+  print_scream
+  echo "${__bold}Story id not found in commit message for '${last_commit_sha}'${__normal}."
+  echo
   echo "Please use 'git commit --amend' to add a 'story-id: <PT story id>' line."
+  echo "That's what I use to figure out what story your commit relates to and I can "
+  echo "find the relevant review to update."
   exit 1
 }
 
@@ -91,13 +95,13 @@ function draw_motivational_dude {
 }
 
 
-draw_motivational_dude
-
 last_commit_log=$(git log -1 --pretty=format:"%s %b")
 line=$(echo -e "${last_commit_log}" | \
   grep -E -i "${STORY_ID_LINE_RX}") || {
   handle_missing_story_id
 }
+
+draw_motivational_dude
 
 story_id=$(echo ${line} | sed "${STORY_ID_RX}")
 github_repo=$(git config --get remote.origin.url | sed -E "s|.*[:/]{1}([^:/]+/[^:]+)$|\1|") 
@@ -149,11 +153,10 @@ flush_stdio
 
 read -p "Please select review to update: " selected_index
 
-if [[ "${selected_index}" -lt "0" ]] || [[ "${selected_index}" -ge "${#review_requests[@]}" ]]; then
-  echo
+check_bounds ${selected_index} ${#review_requests[@]} "0" || {
   echo "Selected index is out of bounds like, totally. Run me again and choose better next time!"
   exit 1;
-fi
+}
 
 case ${selected_index} in
   [0-9]* ) ;;

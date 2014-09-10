@@ -90,7 +90,7 @@ echo; echo -e "Sweet, ${BRANCH} is now totally rebased on top of develop!"
 
 echo; echogreen "Enter ReviewBoard"
 
-branch_commits=($(git log develop..HEAD --pretty="format:%h - %an, %ad : %s"))
+branch_commits=($(git log develop..HEAD --pretty="format:%h"))
 commit_titles=($(git log develop..HEAD --pretty="format:%h - %an, %ad : %s"))
 
 echo "I will now post reviews for the following commits: "
@@ -111,7 +111,7 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 for i in "${!branch_commits[@]}"; do
-  rbt post -g yes ${branch_commits[$i]}
+  rbt post -g yes --branch "${STORY_ID}" ${branch_commits[$i]}
   echo
 done
 
