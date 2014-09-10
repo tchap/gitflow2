@@ -15,7 +15,7 @@ fi
 
 EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-review-update git-flow2-post-reviews"
 SCRIPT_FILES="git-flow2-spinner.sh git-flow2-rainbow.sh git-flow2-common.sh"
-GO_FILES="git-trunk"
+GO_FILES="git-trunk git-trunk-hooks-commit-msg"
 
 GIT_TRUNK_VERSION="0.1.2"
 
@@ -66,7 +66,7 @@ case "$1" in
     done
     GIT_TRUNK="git-trunk.${GIT_TRUNK_VERSION}.darwin-amd64-osx10.9"
     if [[ ! -f "${GIT_TRUNK}.zip" ]]; then
-      wget https://github.com/tchap/git-trunk/releases/download/v${GIT_TRUNK_VERSION}/${GIT_TRUNK}
+      wget "https://github.com/tchap/git-trunk/releases/download/v${GIT_TRUNK_VERSION}/${GIT_TRUNK}.zip"
     fi
     unzip -o "${GIT_TRUNK}.zip"
     for go_binary in $GO_FILES ; do
