@@ -62,9 +62,10 @@ case "$1" in
     for script_file in $SCRIPT_FILES ; do
       install -v -m 0644 "$REPO_NAME/$script_file" "$INSTALL_PREFIX"
     done
-    GIT_TRUNK="git-trunk.0.1.2.darwin-amd64-osx10.9"
+    GIT_TRUNK_VERSION="0.1.2"
+    GIT_TRUNK="git-trunk.${GIT_TRUNK_VERSION}.darwin-amd64-osx10.9"
     if [[ ! -f "${GIT_TRUNK}.zip" ]]; then
-      https://github.com/tchap/git-trunk/releases/download/v0.1.2/${GIT_TRUNK}
+      wget https://github.com/tchap/git-trunk/releases/download/v${GIT_TRUNK_VERSION}/${GIT_TRUNK}
     fi
     unzip -o "${GIT_TRUNK}.zip"
     for go_binary in $GO_FILES ; do
