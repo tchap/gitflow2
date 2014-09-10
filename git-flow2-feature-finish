@@ -8,7 +8,11 @@ PWD=$1
 . rainbow.sh
 . git-flow2-common.sh
 
-source_config ${PWD}
+PROJECT_ID=$(ensure_pt_project_id) || {
+  echo "${PROJECT_ID}"
+  exit 1
+}
+
 
 trap cleanup EXIT
 

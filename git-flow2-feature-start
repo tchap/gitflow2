@@ -4,8 +4,6 @@ set -o pipefail;
 
 [[ -n ${DEBUG} ]] && set -x
 
-PWD=$1
-
 # The usual prelude
 # =================
 
@@ -13,7 +11,10 @@ PWD=$1
 . spinner.sh
 . git-flow2-common.sh
 
-source_config ${PWD}
+PROJECT_ID=$(ensure_pt_project_id) || {
+  echo "${PROJECT_ID}"
+  exit 1
+}
 
 # Make sure we're spliting strings by newlines.
 export IFS=$'\n'
@@ -33,8 +34,6 @@ function cleanup {
 
 # Deal with Pivotal Tracker
 # =========================
-
-ensure_pt_project_id
 
 echogreen "Enter Pivotal Tracker"
 

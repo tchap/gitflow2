@@ -7,14 +7,23 @@ fi
 
 GITFLOW_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
 
-SUBCOMMAND="$1"; shift
-SUBACTION="$1"; shift
+SUBCOMMAND="$1";
 
-CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
+function run_bash_command {
+  local SUBCOMMAND=$1; shift
+  local SUBACTION=$1; shift
 
-[[ -x "${GITFLOW_DIR}/${CMD_SCRIPT}" ]] || {
-  echo "Command ${SUBCOMMAND} ${SUBACTION} not found."
-  exit 1
+  [[ -x "${GITFLOW_DIR}/${CMD_SCRIPT}" ]] || {
+    echo "Git flow command ${SUBCOMMAND} ${SUBACTION} not found."
+    exit 1
+  }
+
+  ${GITFLOW_DIR}/git-flow2-${SUBCOMMAND}-${SUBACTION} $@
 }
 
-${GITFLOW_DIR}/git-flow2-${SUBCOMMAND}-${SUBACTION} `pwd` 
+case $SUBCOMMAND in
+  release) ${GITFLOW_DIR}/git-trunk $@; exit $? ;;
+  story) ${GITFLOW_DIR}/git-trunk $@; exit $? ;;
+  *) run_bash_command $@
+esac
+

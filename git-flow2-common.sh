@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 
 __bold=`tput bold`
 __normal=`tput sgr0`
@@ -7,22 +8,19 @@ function flush_stdio {
   while read -e -t 1; do : ; done
 }
 
-function source_config {
-  dir=$1
-  # Load PROJECT_ID.
-  [[ -e ${PWD}/.workflowrc ]] || {
-    echo "Could not find \"${PWD}/.workflowrc\" file."
-    echo "Please create it and write PROJECT_ID=\"<your PT project id>\" into it."
-    exit 1
-  }
-  . ${PWD}/.workflowrc
-}
-
 function ensure_pt_project_id {
-  if [[ -z ${PROJECT_ID} ]]; then
-    echo "Please specify Pivotal Tracker's PROJECT_ID in '.workflowrc' file"
-    exit 1
-  fi
+  pid=$(git show gitflow-config:gitflow.yml | shyaml get-value "pivotaltracker.projectid") || {
+    echo "${__bold}Oh noes! No gitflow config found!${__normal}"
+    print_scream
+    echo "So listen...we kinda expect you to have this ${__bold}gitflow.yml${__normal} file in a branch called "
+    echo "${__bold}gitflow-config${__normal} in your repo. And you don't seem to have it. So please add it."
+    echo "And specify 'pivotaltracker' field with 'projectid: <YOUR PT PROJECT ID>' in that file."
+    echo
+    echo "Have a nice day!"
+    return 1
+  }
+  echo ${pid}
+  return 0
 }
 
 function generate_rb_summary {

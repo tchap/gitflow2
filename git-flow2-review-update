@@ -4,13 +4,12 @@ set -o pipefail
 
 [[ -n "${DEBUG}" ]] && set -x
 
-PWD=$1
+# Make sure we're spliting strings by newlines.
+export IFS=$'\n'
 
 . rainbow.sh
 . spinner.sh
 . git-flow2-common.sh
-
-source_config ${PWD}
 
 trap cleanup EXIT
 
@@ -113,22 +112,28 @@ start_spinner "Loading ReviewBoard repositories..."
 rb_repo_id=$(rbt api-get /repositories --max-results=200 | \
   underscore extract 'repositories' | \
   underscore find "value.path.indexOf('${github_repo}') >= 0" | \
-  underscore extract 'id' --outfmt text)
+  underscore extract 'id' --outfmt text) || {
+
+  echo
+  echo "Failed to load ReviewBoard repositories..."
+  exit 1
+}
 stop_spinner 0
 
 start_spinner "Loading review request update candidates.."
 # WARNING: Here be dark magic too...
 # Get all review requests whose branch field value contains `story_id`.
-review_requests=($(rbt api-get /review-requests --max-results=200 --repository=${rb_repo_id} --ship-it=0 --status=pending | \
+review_requests=$(rbt api-get /review-requests --max-results=200 --repository=${rb_repo_id} --ship-it=0 --status=pending | \
   underscore extract review_requests | \
-  underscore reject "value.branch.indexOf('${story_id}') < 0" | \
-  underscore pluck id --outfmt text))
+  underscore reject "value.branch.indexOf('${story_id}') < 0")
 stop_spinner 0
 
-if [[ ${#review_requests[@]} -eq "1" ]]; then
-  echo "There's exacly one matching review request: #${review_requests[0]}."
+rids=($(echo "${review_requests}" | underscore pluck 'id' --outfmt text))
+
+if [[ ${#rids[@]} -eq "1" ]]; then
+  echo "There's exacly one matching review request: #${rids[0]}."
   echo "Let's update it now."
-  update_review_request ${review_requests[0]} "${last_commit_log}"
+  update_review_request ${rids[0]} "${last_commit_log}"
   echo
   echo "All done. Have a nice day!"
 
@@ -136,15 +141,16 @@ if [[ ${#review_requests[@]} -eq "1" ]]; then
 fi
 
 echo
-echo "We have found more than one candidate review to update. You'll have to choose."
+echo "We have found more than one candidate review to update (branch field matches). You'll have to choose."
 echo
 
-for i in "${!review_requests[@]}"; do
+summaries=($(echo "${review_requests}" | underscore pluck 'summary' --outfmt text))
+for i in "${!rids[@]}"; do
   if [ "$i" -le "9" ]; then
     # OCD padding.
-    echo "[$i]:  ${review_requests[$i]}"
+    echo -e "[$i]:  ${rids[$i]}: ${summaries[$i]}"
   else
-    echo "[$i]: ${review_requests[$i]}"
+    echo -e "[$i]: ${rids[$i]}: ${summaries[$i]}"
   fi;
 done
 
@@ -153,7 +159,7 @@ flush_stdio
 
 read -p "Please select review to update: " selected_index
 
-check_bounds ${selected_index} ${#review_requests[@]} "0" || {
+check_bounds ${selected_index} ${#rids[@]} "0" || {
   echo "Selected index is out of bounds like, totally. Run me again and choose better next time!"
   exit 1;
 }
@@ -163,7 +169,7 @@ case ${selected_index} in
   * ) echo "Non-numeric value detected. Exiting now."; exit 1;;
 esac
 
-rid=${review_requests[${selected_index}]}
+rid=${rids[${selected_index}]}
 
 echo "Thank you! I will now proceed to update review #${rid}."
 

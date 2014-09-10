@@ -8,8 +8,6 @@ PWD=$1
 . rainbow.sh
 . git-flow2-common.sh
 
-source_config ${PWD}
-
 trap cleanup EXIT
 
 function cleanup {
