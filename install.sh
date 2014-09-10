@@ -17,6 +17,8 @@ EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-review-update git-flow2-
 SCRIPT_FILES="git-flow2-spinner.sh git-flow2-rainbow.sh git-flow2-common.sh"
 GO_FILES="git-trunk"
 
+GIT_TRUNK_VERSION="0.1.2"
+
 echo "### gitflow2 no-make installer ###"
 
 case "$1" in
@@ -62,7 +64,6 @@ case "$1" in
     for script_file in $SCRIPT_FILES ; do
       install -v -m 0644 "$REPO_NAME/$script_file" "$INSTALL_PREFIX"
     done
-    GIT_TRUNK_VERSION="0.1.2"
     GIT_TRUNK="git-trunk.${GIT_TRUNK_VERSION}.darwin-amd64-osx10.9"
     if [[ ! -f "${GIT_TRUNK}.zip" ]]; then
       wget https://github.com/tchap/git-trunk/releases/download/v${GIT_TRUNK_VERSION}/${GIT_TRUNK}
