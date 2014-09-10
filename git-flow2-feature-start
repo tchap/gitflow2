@@ -38,6 +38,39 @@ function cleanup {
 # Usual prelude done
 # ==================
 
+# Make sure that the commit-msg hook is installed
+# ===============================================
+root="$(git rev-parse --show-toplevel)"
+hook_path="$root/.git/hooks/commit-msg"
+hook_executable="$(which git-trunk-hooks-commit-msg)"
+
+if [ -e "$hook_path" ]; then
+  set +e
+  diff "$hook_path" "$hook_executable" 1>/dev/null
+  ret="$?"
+  set -e
+  if [ "$ret" -eq 2 ]; then
+    # Ask the user for confirmation.
+    echo "Your git commit-msg workflow hook is not up to date."
+    read -p "Shall we proceed and replace the current hook with the new one? [y/N]: " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo
+      echo "I need the hook in order to do my job. So I will exit now."
+      exit 1
+    fi
+    echo
+    echo "Installing the workflow git commit-msg hook..."
+    echo
+    cp "$hook_executable" "$hook_path"
+  elif [ "$ret" -ne 0 ]; then
+    exit "$ret"
+  fi
+else
+  echo "Installing the workflow git commit-msg hook...\n"
+  echo
+  cp "$hook_executable" "$hook_path"
+fi
+
 # Deal with Pivotal Tracker
 # =========================
 
