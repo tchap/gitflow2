@@ -7,8 +7,8 @@ set -o pipefail
 # Make sure we're spliting strings by newlines.
 export IFS=$'\n'
 
-. rainbow.sh
-. spinner.sh
+. git-flow2-rainbow.sh
+. git-flow2-spinner.sh
 . git-flow2-common.sh
 
 trap cleanup EXIT

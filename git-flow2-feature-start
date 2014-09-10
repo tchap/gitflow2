@@ -7,8 +7,8 @@ set -o pipefail;
 # The usual prelude
 # =================
 
-. rainbow.sh
-. spinner.sh
+. git-flow2-rainbow.sh
+. git-flow2-spinner.sh
 . git-flow2-common.sh
 
 PROJECT_ID=$(ensure_pt_project_id) || {

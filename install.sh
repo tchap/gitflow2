@@ -13,8 +13,9 @@ if [ -z "$REPO_HOME" ] ; then
 	REPO_HOME="http://github.com/realyze/gitflow2.git"
 fi
 
-EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-feature-finish"
-SCRIPT_FILES="spinner.sh rainbow.sh git-flow2-common.sh"
+EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-feature-finish \
+  git-flow2-review-update git-flow2-post-reviews"
+SCRIPT_FILES="git-flow2-spinner.sh git-flow2-rainbow.sh git-flow2-common.sh"
 
 echo "### gitflow2 no-make installer ###"
 
@@ -41,6 +42,11 @@ case "$1" in
 		exit
 		;;
 	*)
+    echo "Installing python requirements"
+    pip install -r "$REPO_NAME/requirements.txt"
+    if [[ "$?" -ne "0" ]]; then
+      exit 1
+    fi
 		echo "Installing gitflow2 to $INSTALL_PREFIX"
 		if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
 			echo "Using existing repo: $REPO_NAME"
