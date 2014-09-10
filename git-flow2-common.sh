@@ -8,18 +8,50 @@ function flush_stdio {
   while read -e -t 1; do : ; done
 }
 
-function ensure_pt_project_id {
-  pid=$(git show gitflow-config:gitflow.yml | shyaml get-value "pivotaltracker.projectid") || {
-    echo "${__bold}Oh noes! No gitflow config found!${__normal}"
-    print_scream
-    echo "So listen...we kinda expect you to have this ${__bold}gitflow.yml${__normal} file in a branch called "
-    echo "${__bold}gitflow-config${__normal} in your repo. And you don't seem to have it. So please add it."
-    echo "And specify 'pivotaltracker' field with 'projectid: <YOUR PT PROJECT ID>' in that file."
-    echo
-    echo "Have a nice day!"
-    return 1
+function handle_missing_config {
+  echo "${__bold}Oh noes! Missing gitflow config!${__normal}"
+  print_scream
+  echo "So listen...we kinda expect you to have a ${__bold}gitflow.yml${__normal} file in a branch called "
+  echo "${__bold}gitflow-config${__normal} in your repo. And you don't seem to have it. So please add it."
+  echo "And specify 'pivotaltracker' field with 'projectid: <YOUR PT PROJECT ID>' in that file."
+  echo
+  echo "Have a nice day!"
+  return 1
+}
+
+function ensure_pt {
+  local field="$1"
+  local global="$2"
+
+  local global_cfg=""
+  
+  if [[ -f "${HOME}/.gitflow.yml" ]]; then
+    global_cfg=$(cat "${HOME}/.gitflow.yml")
+  fi
+
+  local local_cfg=$(git show gitflow-config:gitflow.yml) || {
+    handle_missing_config
   }
-  echo ${pid}
+
+  local value=$(echo "${local_cfg}" | shyaml get-value "pivotaltracker.${field}")
+
+  if [[ -z "${value}" ]]; then
+    value=$(echo "${global_cfg}" | shyaml get-value "pivotaltracker.${field}")
+  fi
+
+  if [[ -z "${value}" ]]; then
+    echo "${__bold}Oh noes! Missing gitflow config '${field}'!${__normal}"
+    print_scream
+    if [[ -z "${global}" ]]; then
+      echo "Add '${field}' to the 'pivotaltracker' section of your gitflow.yml file in the gitflow-config branch!"
+    else
+      echo "Add '${field}' to the 'pivotaltracker' section of ${HOME}/.gitflow.yml file!"
+    fi
+    exit 1
+  fi
+
+  echo ${value}
+
   return 0
 }
 

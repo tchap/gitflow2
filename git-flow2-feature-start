@@ -11,10 +11,16 @@ set -o pipefail;
 . git-flow2-spinner.sh
 . git-flow2-common.sh
 
-PROJECT_ID=$(ensure_pt_project_id) || {
+PROJECT_ID=$(ensure_pt "project_id") || {
   echo "${PROJECT_ID}"
   exit 1
 }
+
+PIVOTAL_TOKEN=$(ensure_pt "api_token" "global") || {
+  echo "${PIVOTAL_TOKEN}"
+  exit 1
+}
+export PIVOTAL_TOKEN="${PIVOTAL_TOKEN}"
 
 # Make sure we're spliting strings by newlines.
 export IFS=$'\n'
@@ -141,6 +147,7 @@ git checkout -b ${new_branch}
 # The Pivotal Tracker Part
 # ========================
 
+echo
 echogreen "Enter Pivotal Tracker"
 
 # Instruct PT backend to update the story.
