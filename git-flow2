@@ -22,8 +22,8 @@ function run_bash_command {
 }
 
 case $SUBCOMMAND in
-  release) ${GITFLOW_DIR}/git-trunk $@; exit $? ;;
-  story) ${GITFLOW_DIR}/git-trunk $@; exit $? ;;
+  release) git-trunk $@; exit $? ;;
+  story) git-trunk $@; exit $? ;;
   *) run_bash_command $@
 esac
 

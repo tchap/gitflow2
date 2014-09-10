@@ -33,10 +33,10 @@ function ensure_pt {
     handle_missing_config
   }
 
-  local value=$(echo "${local_cfg}" | shyaml get-value "pivotaltracker.${field}")
+  local value=$(echo "${local_cfg}" | shyaml get-value "pivotal_tracker.${field}")
 
   if [[ -z "${value}" ]]; then
-    value=$(echo "${global_cfg}" | shyaml get-value "pivotaltracker.${field}")
+    value=$(echo "${global_cfg}" | shyaml get-value "pivotal_tracker.${field}")
   fi
 
   if [[ -z "${value}" ]]; then
