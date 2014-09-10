@@ -42,11 +42,6 @@ case "$1" in
 		exit
 		;;
 	*)
-    echo "Installing python requirements"
-    pip install -r "$REPO_NAME/requirements.txt"
-    if [[ "$?" -ne "0" ]]; then
-      exit 1
-    fi
 		echo "Installing gitflow2 to $INSTALL_PREFIX"
 		if [ -d "$REPO_NAME" -a -d "$REPO_NAME/.git" ] ; then
 			echo "Using existing repo: $REPO_NAME"
@@ -54,6 +49,11 @@ case "$1" in
 			echo "Cloning repo from GitHub to $REPO_NAME"
 			git clone "$REPO_HOME" "$REPO_NAME"
 		fi
+    echo "Installing python requirements"
+    pip install -r "$REPO_NAME/requirements.txt"
+    if [[ "$?" -ne "0" ]]; then
+      exit 1
+    fi
 		install -v -d -m 0755 "$INSTALL_PREFIX"
 		for exec_file in $EXEC_FILES ; do
 			install -v -m 0755 "$REPO_NAME/$exec_file" "$INSTALL_PREFIX"
