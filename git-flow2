@@ -13,7 +13,11 @@ function run_bash_command {
   local SUBCOMMAND=$1; shift
   local SUBACTION=$1; shift
 
-  CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
+  if [[ "${SUBCOMMAND}" == "init" ]]; then
+    CMD_SCRIPT="git-flow2-${SUBCOMMAND}"
+  else
+    CMD_SCRIPT="git-flow2-${SUBCOMMAND}-${SUBACTION}"
+  fi
 
   if [[ "${SUBACTION}" == "-h" ]]; then
     echo "help is TODO"

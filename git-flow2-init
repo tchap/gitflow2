@@ -47,7 +47,7 @@ echo "Sweet. All the required branches exist."
 
 echo
 echored "Local Config"
-if ! $(git show gitflow-config:gitflow2.yml 2>/dev/null); then
+if ! $(git show gitflow-config:gitflow.yml 2>/dev/null); then
   print_action_required
   echo "Please make sure there's a 'pivotal_tracker' section with "
   echo "'project_id: <PT PROJECT ID>' in gitflow.yml file in branch 'gitflow-config'"
@@ -59,7 +59,7 @@ fi
 echo
 echored "Global Config"
 
-if [[ ! -f "${HOME}/.gitflow2.yml" ]]; then
+if [[ ! -f "${HOME}/.gitflow.yml" ]]; then
   print_action_required
   echo "I can't find the file '${HOME}/.gitflow.yml'."
   echo "No hard feelings but I need it. So please create it."
@@ -103,36 +103,3 @@ else
   echo
   cp "$hook_executable" "$hook_path"
 fi
-
-
-
-
-#PIVOTAL_TOKEN=$(ensure_pt "token" "global") || {
-#  echo "${PIVOTAL_TOKEN}"
-#  exit 1
-#}
-#export PIVOTAL_TOKEN="${PIVOTAL_TOKEN}"
-#
-#start_spinner "Loading projects from Pivotal Tracker..."
-#IFS=$'\n' 
-#pt_projects=$(\
-#  curl -X GET -H "X-TrackerToken: $PIVOTAL_TOKEN" --silent \
-#    "https://www.pivotaltracker.com/services/v5/projects")
-#stop_spinner
-#
-#pt_ids=($(echo "${pt_projects}" | underscore pluck "id" --outfmt text))
-#pt_names=($(echo "${pt_projects}" | underscore pluck "name" --outfmt text))
-#
-#IFS="${origIFS}"
-#
-#for i in "${!pt_names[@]}"; do
-#  echo "[${i}]: ${pt_names[$i]}"
-#done
-#
-#read -p "Please choose pt project to start: " project_index
-#case $story_index in
-#  [0-9]* ) echo "You chose story number ${project_index}. Thank you.";;
-#  * ) echo "Non-numeric value detected. Exiting now."; exit 1;;
-#esac
-
-
