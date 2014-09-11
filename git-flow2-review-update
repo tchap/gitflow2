@@ -11,6 +11,8 @@ export IFS=$'\n'
 . git-flow2-spinner.sh
 . git-flow2-common.sh
 
+ensure_repo_is_initialized
+
 trap cleanup EXIT
 
 function cleanup {

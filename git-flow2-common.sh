@@ -4,6 +4,10 @@ set -o pipefail
 __bold=`tput bold`
 __normal=`tput sgr0`
 
+
+GIT_CFG_SECTION='gitflow2'
+GIT_CFG_INITIALIZED="${GIT_CFG_SECTION}.initialized"
+
 function flush_stdio {
   while read -e -t 1; do : ; done
 }
@@ -22,6 +26,18 @@ function handle_missing_config {
 function print_checkmark {
   echo -e "\xE2\x9C\x93"
 }
+
+
+function ensure_repo_is_initialized {
+  if ! git config "${GIT_CFG_INITIALIZED}" >/dev/null 2>&1; then
+    echo "${__bold}Oh noes, repository not initialized!${__normal}"
+    print_scream
+    echo "Please run 'git flow2 init' to initialize the repository."
+    echo "Have a nice day!"
+    exit 1
+  fi
+}
+
 
 function ensure_pt {
   local field="$1"

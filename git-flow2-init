@@ -11,15 +11,18 @@ origIFS=$IFS
 
 trap cleanup EXIT
 
+ACTION_REQUIRED=""
+
 function cleanup {
   if [[ "$?" -ne "0" ]]; then
     echo
-    echo "Something was wrong. I'm bailing out. Have a nice day!"
+    echo "I'm bailing out. Have a nice day!"
   fi
   stop_spinner 0
 }
 
-function print_action_required {
+function mark_action_required {
+  ACTION_REQUIRED="true"
   echo "${__bold}>>> Action required! <<< ${__normal}"
 }
 
@@ -66,12 +69,8 @@ git checkout develop >/dev/null
 echo
 echored "Local Config"
 
-set +e
-git show gitflow-config:gitflow.yml 2>/dev/null >/dev/null
-rc=$?
-set -e
-if [[ "${rc}" -ne "0" ]]; then
-  print_action_required
+if ! git show gitflow-config:gitflow.yml 2>/dev/null >/dev/null; then
+  mark_action_required
   echo "Please make sure there's a 'pivotal_tracker' section with "
   echo "'project_id: <PT PROJECT ID>' in 'gitflow.yml' file in branch 'gitflow-config'"
   echo "Example setting:"
@@ -85,7 +84,7 @@ echo
 echored "Global Config"
 
 if [[ ! -f "${HOME}/.gitflow.yml" ]]; then
-  print_action_required
+  mark_action_required
   echo "I can't find the file '${HOME}/.gitflow.yml'."
   echo "No hard feelings but I need it. So please create it."
   echo "And make sure there's a 'pivotal_tracker' section with 'token' property "
@@ -112,6 +111,7 @@ if [ -e "$hook_path" ]; then
   set -e
   if [ "$ret" -eq 2 ]; then
     # Ask the user for confirmation.
+    mark_action_required
     echo "Your git commit-msg workflow hook is not up to date."
     read -p "Shall we proceed and replace the current hook with the new one? [y/N]: " -n 1 -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -135,4 +135,12 @@ else
   cp "$hook_executable" "$hook_path"
   echo
   echo -n "Git hook installed. "; print_checkmark
+fi
+
+if [[ -n "${ACTION_REQUIRED}" ]]; then
+  echo "Some required settings were not in place."
+  echo "Please fix that and run me again!"
+  exit 1
+else
+  git config ${GIT_CFG_INITIALIZED} true 
 fi

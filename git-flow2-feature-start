@@ -11,6 +11,8 @@ set -o pipefail;
 . git-flow2-spinner.sh
 . git-flow2-common.sh
 
+ensure_repo_is_initialized
+
 PROJECT_ID=$(ensure_pt "project_id") || {
   echo "${PROJECT_ID}"
   exit 1
@@ -81,10 +83,19 @@ start_spinner "Loading stories from Pivotal tracker"
 # TODO: This only gets first 100 stories.
 stories=$(pivotal_tools show stories --number 100  --project-id ${PROJECT_ID}) || {
   # Handle failure.
-  echo -e "\n${stories}"
+  echo -e "${stories}"
   exit 1
 }
 stop_spinner 0
+
+echo
+
+if [[ ${stories} == "None" ]]; then
+  echo "Hm, looks like there are no stories to choose from."
+  echo "Add some to backlog or current and run me again!"
+  echo "Have a nice day!"
+  exit 0
+fi
 
 # We're only interested in features and bugs that are started or unstarted.
 stories_array=($(echo -e "${stories}" | \
