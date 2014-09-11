@@ -17,7 +17,7 @@ EXEC_FILES="git-flow2 git-flow2-feature-start git-flow2-review-update git-flow2-
 SCRIPT_FILES="git-flow2-spinner.sh git-flow2-rainbow.sh git-flow2-common.sh"
 GO_FILES="git-trunk"
 
-GIT_TRUNK_VERSION="0.1.3"
+GIT_TRUNK_VERSION="0.1.4"
 
 echo "### gitflow2 no-make installer ###"
 
