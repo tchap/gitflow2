@@ -14,7 +14,9 @@ CHANGE_ID_REGEX="^change-id:[[:space:]]*[0-9]+$"
 function add_line {
   local line="$1"
   # Add `line` before first line starting with `#`.
-  new_content=$(cat "${commit_msg_file}" | sed "1,/^#.*/s/^#.*/${line}/")
+  # SED unfortunately on some platforms cannot print newlines so we're using `tr` in
+  # a hacky way to amend that.
+  new_content=$(cat "${commit_msg_file}" | sed "1,/^#.*/s/^#.*/~${line}/" | tr "~" "\n")
   echo "${new_content}" >${commit_msg_file}
 }
 
