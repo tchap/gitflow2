@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+[[ -n "${DEBUG}" ]] && set -x
+
 origIFS=$IFS
 
 . git-flow2-rainbow.sh
@@ -30,30 +32,53 @@ if [[ -n "$(git diff --shortstat)" ]]; then
   exit 1
 fi
 
-echored "Required Branches"
+start_spinner "Fetching from origin..."
+err=$(git fetch -a 2>&1 >/dev/null) || {
+  stop_spinner 1
+  echo "${err}"
+  exit 1
+}
+stop_spinner 0
+
+echo
+echored "Check Required Branches"
 echo "Making sure required branches exist: ${BRANCHES}"
 
 for branch in ${BRANCHES}; do
-  if ! $(git show-ref --verify --quiet "refs/heads/${branch}"); then
+  if ! git checkout ${branch} >/dev/null 2>/dev/null; then
+    echo
+    echo "No branch '${branch}' found. Will create one for you for free."
     git checkout -b ${branch}
+    git commit --allow-empty --message "Initial branch commit."
+    echo
+  else
+    echo -n "Branch '${branch}' found. "; print_checkmark
   fi
 done
 
-echo "Checking out develop..."
-git checkout develop
+echo
+echo -n "Sweet, all the required branches exist! "; print_checkmark;
 
 echo
-echo "Sweet. All the required branches exist."
+echo "Checking out develop..."
+git checkout develop >/dev/null
 
 echo
 echored "Local Config"
-if ! $(git show gitflow-config:gitflow.yml 2>/dev/null); then
+
+set +e
+git show gitflow-config:gitflow.yml 2>/dev/null >/dev/null
+rc=$?
+set -e
+if [[ "${rc}" -ne "0" ]]; then
   print_action_required
   echo "Please make sure there's a 'pivotal_tracker' section with "
-  echo "'project_id: <PT PROJECT ID>' in gitflow.yml file in branch 'gitflow-config'"
+  echo "'project_id: <PT PROJECT ID>' in 'gitflow.yml' file in branch 'gitflow-config'"
   echo "Example setting:"
   echo
   echo -e "  pivotal_tracker:\n    project_id: MY_PT_PROJECT_ID"
+else
+  echo -n "Looks good. "; print_checkmark
 fi
 
 echo
@@ -68,9 +93,12 @@ if [[ ! -f "${HOME}/.gitflow.yml" ]]; then
   echo "Example setting: "
   echo
   echo -e "  pivotal_tracker:\n    token: MY_PT_API_TOKEN"
+else
+  echo -n "Looks good. "; print_checkmark
 fi
 
 
+echo
 echored "Git Commit Hook"
 
 root="$(git rev-parse --show-toplevel)"
@@ -95,11 +123,16 @@ if [ -e "$hook_path" ]; then
     echo "Installing the workflow git commit-msg hook..."
     echo
     cp "$hook_executable" "$hook_path"
+    echo
+    echo -n "Git hook installed. "; print_checkmark
   elif [ "$ret" -ne 0 ]; then
     exit "$ret"
+  else
+    echo -n "Looks good. "; print_checkmark
   fi
 else
   echo "Installing the workflow git commit-msg hook..."
-  echo
   cp "$hook_executable" "$hook_path"
+  echo
+  echo -n "Git hook installed. "; print_checkmark
 fi

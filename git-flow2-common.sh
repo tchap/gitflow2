@@ -18,6 +18,11 @@ function handle_missing_config {
   return 1
 }
 
+
+function print_checkmark {
+  echo -e "\xE2\x9C\x93"
+}
+
 function ensure_pt {
   local field="$1"
   local global="$2"
