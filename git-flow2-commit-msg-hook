@@ -4,11 +4,9 @@ set -e
 commit_msg_file=$1
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 story_id=$(echo ${current_branch} | rev | cut -d"/" -f 1 | rev)
-if ! echo "${story_id}" | grep -E "[0-9]+"; then
+if ! echo "${story_id}" | grep -E "[0-9]+" >/dev/null; then
   exit 0
 fi
-
-echo ${commit_msg_file}
 
 STORY_ID_REGEX="^story-id:[[:space:]]*[0-9]+$"
 CHANGE_ID_REGEX="^change-id:[[:space:]]*[0-9]+$"
