@@ -1,0 +1,138 @@
+#!/bin/bash
+set -e
+
+origIFS=$IFS
+
+. git-flow2-rainbow.sh
+. git-flow2-spinner.sh
+. git-flow2-common.sh
+
+trap cleanup EXIT
+
+function cleanup {
+  if [[ "$?" -ne "0" ]]; then
+    echo
+    echo "Something was wrong. I'm bailing out. Have a nice day!"
+  fi
+  stop_spinner 0
+}
+
+function print_action_required {
+  echo "${__bold}>>> Action required! <<< ${__normal}"
+}
+
+BRANCHES="develop master gitflow-config"
+
+if [[ -n "$(git diff --shortstat)" ]]; then
+  echo "Your repository is one dirty dirty repository."
+  echo "Please commit or stash your changes and then run me again."
+  echo "Have a nice day!"
+  exit 1
+fi
+
+echored "Required Branches"
+echo "Making sure required branches exist: ${BRANCHES}"
+
+for branch in ${BRANCHES}; do
+  if ! $(git show-ref --verify --quiet "refs/heads/${branch}"); then
+    git checkout -b ${branch}
+  fi
+done
+
+echo "Checking out develop..."
+git checkout develop
+
+echo
+echo "Sweet. All the required branches exist."
+
+echo
+echored "Local Config"
+if ! $(git show gitflow-config:gitflow2.yml 2>/dev/null); then
+  print_action_required
+  echo "Please make sure there's a 'pivotal_tracker' section with "
+  echo "'project_id: <PT PROJECT ID>' in gitflow.yml file in branch 'gitflow-config'"
+  echo "Example setting:"
+  echo
+  echo -e "  pivotal_tracker:\n    project_id: MY_PT_PROJECT_ID"
+fi
+
+echo
+echored "Global Config"
+
+if [[ ! -f "${HOME}/.gitflow2.yml" ]]; then
+  print_action_required
+  echo "I can't find the file '${HOME}/.gitflow.yml'."
+  echo "No hard feelings but I need it. So please create it."
+  echo "And make sure there's a 'pivotal_tracker' section with 'token' property "
+  echo "that has your Pivotal Tracker API token as the value."
+  echo "Example setting: "
+  echo
+  echo -e "  pivotal_tracker:\n    token: MY_PT_API_TOKEN"
+fi
+
+
+echored "Git Commit Hook"
+
+root="$(git rev-parse --show-toplevel)"
+hook_path="$root/.git/hooks/commit-msg"
+hook_executable="$(which git-trunk-hooks-commit-msg)"
+
+if [ -e "$hook_path" ]; then
+  set +e
+  diff "$hook_path" "$hook_executable" 1>/dev/null
+  ret="$?"
+  set -e
+  if [ "$ret" -eq 2 ]; then
+    # Ask the user for confirmation.
+    echo "Your git commit-msg workflow hook is not up to date."
+    read -p "Shall we proceed and replace the current hook with the new one? [y/N]: " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo
+      echo "I need the hook in order to do my job. So I will exit now."
+      exit 1
+    fi
+    echo
+    echo "Installing the workflow git commit-msg hook..."
+    echo
+    cp "$hook_executable" "$hook_path"
+  elif [ "$ret" -ne 0 ]; then
+    exit "$ret"
+  fi
+else
+  echo "Installing the workflow git commit-msg hook..."
+  echo
+  cp "$hook_executable" "$hook_path"
+fi
+
+
+
+
+#PIVOTAL_TOKEN=$(ensure_pt "token" "global") || {
+#  echo "${PIVOTAL_TOKEN}"
+#  exit 1
+#}
+#export PIVOTAL_TOKEN="${PIVOTAL_TOKEN}"
+#
+#start_spinner "Loading projects from Pivotal Tracker..."
+#IFS=$'\n' 
+#pt_projects=$(\
+#  curl -X GET -H "X-TrackerToken: $PIVOTAL_TOKEN" --silent \
+#    "https://www.pivotaltracker.com/services/v5/projects")
+#stop_spinner
+#
+#pt_ids=($(echo "${pt_projects}" | underscore pluck "id" --outfmt text))
+#pt_names=($(echo "${pt_projects}" | underscore pluck "name" --outfmt text))
+#
+#IFS="${origIFS}"
+#
+#for i in "${!pt_names[@]}"; do
+#  echo "[${i}]: ${pt_names[$i]}"
+#done
+#
+#read -p "Please choose pt project to start: " project_index
+#case $story_index in
+#  [0-9]* ) echo "You chose story number ${project_index}. Thank you.";;
+#  * ) echo "Non-numeric value detected. Exiting now."; exit 1;;
+#esac
+
+
