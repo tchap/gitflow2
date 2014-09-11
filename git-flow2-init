@@ -111,11 +111,11 @@ if [ -e "$hook_path" ]; then
   set -e
   if [ "$ret" -eq 2 ]; then
     # Ask the user for confirmation.
-    mark_action_required
     echo "Your git commit-msg workflow hook is not up to date."
     read -p "Shall we proceed and replace the current hook with the new one? [y/N]: " -n 1 -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
       echo
+      mark_action_required
       echo "I need the hook in order to do my job. So I will exit now."
       exit 1
     fi
