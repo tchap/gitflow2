@@ -108,13 +108,13 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 0
 fi
 
+echo
+echo "Posting... (might take a while or two)"
+
 for i in "${!branch_commits[@]}"; do
   rbt post -g yes --branch "${STORY_ID}" ${branch_commits[$i]}
   echo
 done
-
-echo
-echo "Posting... (might take a while or two)"
 
 echo
 echo "All done".
