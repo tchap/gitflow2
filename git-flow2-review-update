@@ -59,6 +59,7 @@ function update_review_request {
   stop_spinner 0
 
   new_descr=$(echo -e "${last_commit_log}\n${descr}")
+  echo "Updating the review"
 
   rbt post -r ${rid} --description "${new_descr}"
 }
@@ -94,7 +95,7 @@ function draw_motivational_dude {
 }
 
 
-last_commit_log=$(git log -1 --pretty=format:"%s %b")
+last_commit_log="$(git log -1 --pretty=format:\"%s%n%b\")"
 line=$(echo -e "${last_commit_log}" | \
   grep -E -i "${STORY_ID_LINE_RX}") || {
   handle_missing_story_id
@@ -130,10 +131,25 @@ stop_spinner 0
 
 rids=($(echo "${review_requests}" | underscore pluck 'id' --outfmt text))
 
+if [[ ${#rids[@]} -eq "0" ]]; then
+  echo "Well this is weird. I could not find any matching review request."
+  echo
+  echo "Are you sure you shouldn't be developing this on a feature branch?"
+  echo "Or maybe you just forgot to publish it?"
+  echo
+  echo "But anyway, I will post a new review now."
+  rbt post --branch "${story_id}" \
+    --summary "$(git log -1 --pretty=format:\"%s\")" \
+    --description "$(git log -1 --pretty=format:\"%b\")"
+  echo
+  echo "Have a nice day!"
+  exit 0
+fi
+
 if [[ ${#rids[@]} -eq "1" ]]; then
   echo "There's exacly one matching review request: #${rids[0]}."
   echo "Let's update it now."
-  update_review_request ${rids[0]} "${last_commit_log}"
+  update_review_request ${rids[0]} "$(git log -1 --pretty=format:\"%s%n%n%b\")"
   echo
   echo "All done. Have a nice day!"
 
@@ -160,7 +176,7 @@ flush_stdio
 read -p "Please select review to update: " selected_index
 
 check_bounds ${selected_index} ${#rids[@]} "0" || {
-  echo "Selected index is out of bounds like, totally. Run me again and choose better next time!"
+  echo "Selected index is out of bounds. Run me again and choose better next time!"
   exit 1;
 }
 
@@ -173,7 +189,7 @@ rid=${rids[${selected_index}]}
 
 echo "Thank you! I will now proceed to update review #${rid}."
 
-update_review_request "${rid}" "${last_commit_log}"
+update_review_request "${rid}" "$(git log -1 --pretty=format:\"%s%n%n%b\")"
 
 echo
 echo "All done. Don't forget to publish your changes in Review Board!"
