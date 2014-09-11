@@ -99,7 +99,7 @@ fi
 
 # We're only interested in features and bugs that are started or unstarted.
 stories_array=($(echo -e "${stories}" | \
-  grep "feature\|bug[\s]+started\|unstarted[^[]+\[" | \
+  grep -E "(feature|bug)[[:space:]]+(started|unstarted)[[:space:]]+\[" | \
   grep -v "unscheduled[^[]*\["))
 
 echo "I will now list all the suitable stories in Pivotal Tracker I've found."
@@ -118,13 +118,24 @@ flush_stdio
 # Prompt user to select a story.
 read -p "Please choose a story to start: " story_index
 case $story_index in
-  [0-9]* ) echo "You chose story number ${story_index}. Thank you.";;
+  [0-9]* ) echo ;;
   * ) echo "Non-numeric value detected. Exiting now."; exit 0;;
 esac
+
+check_bounds ${story_index} ${#stories_array[@]} "0" || {
+  echo "Selected index is out of bounds. Run me again and choose better next time!"
+  exit 1;
+}
 
 # Parse story string to get the story id.
 story_id=`echo ${stories_array[$story_index]} | cut -d' ' -f1 | tr -d \#`
 
+# Make sure the story is pointed.
+if echo "${stories_array[$story_index]}" | grep -E "feature.*\[[[:space:]]+\]" >/dev/null; then
+  echo "Story must be estimated in order to be started."
+  echo "Point story #${story_id} and run me again!"
+  exit 1
+fi
 
 # Check if there are any story branches for this story already.
 # =============================================================
