@@ -114,6 +114,9 @@ for i in "${!branch_commits[@]}"; do
 done
 
 echo
+echo "Posting... (might take a while or two)"
+
+echo
 echo "All done".
 
 echo; echogreen "Next Steps"
